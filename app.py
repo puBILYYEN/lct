@@ -1704,17 +1704,17 @@ def page_day9():
         st.title("📋 9 月物流營運建議書")
     with col_b1:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🔗 Day8 供應鏈", use_container_width=True):
+        if st.button("🔗 Day8 供應鏈串接", use_container_width=True):
             st.session_state["_pending_nav"] = "🔗 Day8 供應鏈串接"
             st.rerun()
     with col_b2:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("📦 Day6 倉儲", use_container_width=True):
+        if st.button("📦 Day6 倉庫整理師", use_container_width=True):
             st.session_state["_pending_nav"] = "📦 Day6 倉庫整理師"
             st.rerun()
     with col_b3:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🚚 Day7 配送", use_container_width=True):
+        if st.button("🚚 Day7 遲到偵探", use_container_width=True):
             st.session_state["_pending_nav"] = "🚚 Day7 遲到偵探"
             st.rerun()
     st.caption(f"故事 {story_id} · {row['story_name']} · 承接 {row['承接']}")
