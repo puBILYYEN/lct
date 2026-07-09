@@ -815,6 +815,27 @@ def page_day7():
                 ).add_to(fg)
             fg.add_to(m)
 
+        # 只顯示異常點時(點少,不會撐爆 DOM),額外加一組「按司機」圖層做多層比對:
+        # 右上角圖層控制關掉路線、只開某位司機,排除路線因素單獨看他的異常點分佈
+        if show_only_anomaly:
+            for _driver in sorted(df_map["司機代碼"].unique()):
+                _sub_d = df_map[df_map["司機代碼"] == _driver]
+                _fg_d = folium.FeatureGroup(name=f"司機 {_driver}({len(_sub_d)} 筆)", show=False)
+                for _, _row in _sub_d.iterrows():
+                    folium.CircleMarker(
+                        location=[_row["客戶緯度"], _row["客戶經度"]],
+                        radius=4, color="red", fill=True, fillOpacity=0.6,
+                        popup=folium.Popup(
+                            f"<b>訂單</b> {_row['訂單編號']}<br>"
+                            f"<b>路線</b> {_row['路線代碼']} · "
+                            f"<b>司機</b> {_row['司機代碼']}<br>"
+                            f"<b>偏移</b> {_row['偏移分鐘']:.0f} 分<br>"
+                            f"<b>OTD</b> {'✓ 在窗' if _row['在窗內'] else '✗ 失準'}",
+                            max_width=260,
+                        ),
+                    ).add_to(_fg_d)
+                _fg_d.add_to(m)
+
         folium.LayerControl(collapsed=False).add_to(m)
         components.html(m.get_root().render(), height=540, scrolling=True)
 
