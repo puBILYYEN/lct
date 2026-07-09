@@ -101,6 +101,31 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# 讓翻譯外掛（Google 翻譯等）不要竄改頁面 DOM——它會把文字包進 <font> 標籤，
+# 跟 Streamlit 的 React 打架,噴 insertBefore NotFoundError,demo 時畫面出現紅色
+# 錯誤框。加 notranslate 標記(meta + html translate=no + notranslate class)請
+# 翻譯工具跳過整頁。components.html 在 iframe 內,用 window.parent 打到 Streamlit 主頁。
+components.html(
+    """
+    <script>
+    (function () {
+        try {
+            var doc = window.parent.document;
+            doc.documentElement.setAttribute('translate', 'no');
+            doc.documentElement.classList.add('notranslate');
+            if (!doc.querySelector('meta[name="google"][content="notranslate"]')) {
+                var m = doc.createElement('meta');
+                m.name = 'google';
+                m.content = 'notranslate';
+                doc.head.appendChild(m);
+            }
+        } catch (e) {}
+    })();
+    </script>
+    """,
+    height=0,
+)
+
 '''
 
 FOOTER = '''
@@ -217,81 +242,20 @@ def patch_day9(text: str) -> str:
 
 def patch_day7(text: str) -> str:
     """只用在合併時的字串置換，組員原始檔一律不動。
-    「地圖只顯示異常點」checkbox 預設改成打勾——這張地圖的用意是證明異常
-    集中在特定路線（R-03），紅綠點全開反而讓聚集現象被稀釋，預設只顯示
-    異常點才能讓重點一眼跳出來。使用者仍可自己取消勾選看全部點。
+    唯一改動：讓每條路線的點「先畫綠(正常)、後畫紅(異常)」，紅點後畫就浮在
+    綠點上層,不會被綠點蓋掉——組長要用同位置紅綠對照論證,原本紅綠按資料
+    順序混畫、紅點常被綠點蓋住讓聚集區看起來偏淡,這裡只調繪製順序把紅點
+    墊上來,大小/顏色/紅綠都顯示(組長原始 checkbox value=False)全部不動。
 
-    另外：組長想讓總經理能「多層比對」——先看路線分佈抓出問題路線，
-    再排除路線因素、單獨看司機分佈。原本地圖只有「按路線」分圖層，
-    現在加一組「按司機」分圖層，兩組圖層都能在地圖右上角個別開關，
-    使用者可以把路線圖層全關、只開某個司機的圖層，單獨看他的異常點
-    散在哪裡，不受路線影響。
+    註：checkbox 維持組長原始的 value=False(紅綠都顯示)。曾一度改成預設
+    只顯示紅點,已還原。也曾試加「按司機」圖層,但每筆畫兩次撐爆 DOM,已復原。
     """
     text = text.replace(
-        'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=False)',
-        'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=True)',
-    )
-    text = text.replace(
-        'st.caption("🔴 異常(IQR 外) · 🟢 正常 · 點擊 marker 看訂單詳情")',
-        'st.caption("🔴 異常(IQR 外) · 🟢 正常 · 右上角圖層可切換「按路線」或「按司機」分組,關掉路線圖層、只開單一司機圖層,可排除路線因素單獨看司機 · 點擊 marker 看訂單詳情")',
-    )
-    text = text.replace(
-        '    # 每條路線一個 FeatureGroup(LayerControl)\n'
-        '    for route in sorted(df_map["路線代碼"].unique()):\n'
-        '        sub = df_map[df_map["路線代碼"] == route]\n'
-        '        fg = folium.FeatureGroup(name=f"{route}({len(sub)} 筆)")\n'
         '        for _, row in sub.iterrows():\n'
-        '            color = "red" if row["異常旗標"] else "green"\n'
-        '            folium.CircleMarker(\n'
-        '                location=[row["客戶緯度"], row["客戶經度"]],\n'
-        '                radius=4,\n'
-        '                color=color,\n'
-        '                fill=True,\n'
-        '                fillOpacity=0.6,\n'
-        '                popup=folium.Popup(\n'
-        '                    f"<b>訂單</b> {row[\'訂單編號\']}<br>"\n'
-        '                    f"<b>路線</b> {row[\'路線代碼\']} · "\n'
-        '                    f"<b>司機</b> {row[\'司機代碼\']}<br>"\n'
-        '                    f"<b>偏移</b> {row[\'偏移分鐘\']:.0f} 分<br>"\n'
-        '                    f"<b>OTD</b> {\'✓ 在窗\' if row[\'在窗內\'] else \'✗ 失準\'}",\n'
-        '                    max_width=260,\n'
-        '                ),\n'
-        '            ).add_to(fg)\n'
-        '        fg.add_to(m)\n',
-        '    def _make_marker(row):\n'
-        '        color = "red" if row["異常旗標"] else "green"\n'
-        '        popup_html = (\n'
-        '            f"<b>訂單</b> {row[\'訂單編號\']}<br>"\n'
-        '            f"<b>路線</b> {row[\'路線代碼\']} · "\n'
-        '            f"<b>司機</b> {row[\'司機代碼\']}<br>"\n'
-        '            f"<b>偏移</b> {row[\'偏移分鐘\']:.0f} 分<br>"\n'
-        '            f"<b>OTD</b> {\'✓ 在窗\' if row[\'在窗內\'] else \'✗ 失準\'}"\n'
-        '        )\n'
-        '        return folium.CircleMarker(\n'
-        '            location=[row["客戶緯度"], row["客戶經度"]],\n'
-        '            radius=4,\n'
-        '            color=color,\n'
-        '            fill=True,\n'
-        '            fillOpacity=0.6,\n'
-        '            popup=folium.Popup(popup_html, max_width=260),\n'
-        '        )\n'
-        '\n'
-        '    # 第一組圖層：按路線分組——先看「哪條路線」有問題\n'
-        '    for route in sorted(df_map["路線代碼"].unique()):\n'
-        '        sub = df_map[df_map["路線代碼"] == route]\n'
-        '        fg = folium.FeatureGroup(name=f"路線 {route}({len(sub)} 筆)")\n'
-        '        for _, row in sub.iterrows():\n'
-        '            _make_marker(row).add_to(fg)\n'
-        '        fg.add_to(m)\n'
-        '\n'
-        '    # 第二組圖層：按司機分組——關掉路線圖層、只開某位司機，\n'
-        '    # 排除路線因素,單獨看「這個司機」的異常點散在哪裡\n'
-        '    for driver in sorted(df_map["司機代碼"].unique()):\n'
-        '        sub = df_map[df_map["司機代碼"] == driver]\n'
-        '        fg = folium.FeatureGroup(name=f"司機 {driver}({len(sub)} 筆)", show=False)\n'
-        '        for _, row in sub.iterrows():\n'
-        '            _make_marker(row).add_to(fg)\n'
-        '        fg.add_to(m)\n',
+        '            color = "red" if row["異常旗標"] else "green"\n',
+        '        # 先畫綠(正常)、後畫紅(異常),讓紅點浮在上層不被綠點蓋掉\n'
+        '        for _, row in sub.sort_values("異常旗標").iterrows():\n'
+        '            color = "red" if row["異常旗標"] else "green"\n',
     )
     return text
 

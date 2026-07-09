@@ -59,6 +59,31 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# 讓翻譯外掛（Google 翻譯等）不要竄改頁面 DOM——它會把文字包進 <font> 標籤，
+# 跟 Streamlit 的 React 打架,噴 insertBefore NotFoundError,demo 時畫面出現紅色
+# 錯誤框。加 notranslate 標記(meta + html translate=no + notranslate class)請
+# 翻譯工具跳過整頁。components.html 在 iframe 內,用 window.parent 打到 Streamlit 主頁。
+components.html(
+    """
+    <script>
+    (function () {
+        try {
+            var doc = window.parent.document;
+            doc.documentElement.setAttribute('translate', 'no');
+            doc.documentElement.classList.add('notranslate');
+            if (!doc.querySelector('meta[name="google"][content="notranslate"]')) {
+                var m = doc.createElement('meta');
+                m.name = 'google';
+                m.content = 'notranslate';
+                doc.head.appendChild(m);
+            }
+        } catch (e) {}
+    })();
+    </script>
+    """,
+    height=0,
+)
+
 def page_day6():
     # -*- coding: utf-8 -*-
     """
@@ -538,7 +563,7 @@ def page_day7():
 
     sel_routes  = st.sidebar.multiselect("路線", all_routes, default=all_routes)
     sel_drivers = st.sidebar.multiselect("司機", all_drivers, default=all_drivers)
-    show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=True)
+    show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=False)
 
     df_f = df[df["路線代碼"].isin(sel_routes) &
               df["司機代碼"].isin(sel_drivers)]
@@ -744,7 +769,7 @@ def page_day7():
     # ============================================================
     st.divider()
     st.subheader("🗺 異常配送地圖看板")
-    st.caption("🔴 異常(IQR 外) · 🟢 正常 · 右上角圖層可切換「按路線」或「按司機」分組,關掉路線圖層、只開單一司機圖層,可排除路線因素單獨看司機 · 點擊 marker 看訂單詳情")
+    st.caption("🔴 異常(IQR 外) · 🟢 正常 · 點擊 marker 看訂單詳情")
 
     if show_only_anomaly:
         df_map = df_f[df_f["異常旗標"]]
@@ -766,39 +791,28 @@ def page_day7():
         m = folium.Map(location=[center_lat, center_lon], zoom_start=11,
                        tiles="OpenStreetMap")
 
-        def _make_marker(row):
-            color = "red" if row["異常旗標"] else "green"
-            popup_html = (
-                f"<b>訂單</b> {row['訂單編號']}<br>"
-                f"<b>路線</b> {row['路線代碼']} · "
-                f"<b>司機</b> {row['司機代碼']}<br>"
-                f"<b>偏移</b> {row['偏移分鐘']:.0f} 分<br>"
-                f"<b>OTD</b> {'✓ 在窗' if row['在窗內'] else '✗ 失準'}"
-            )
-            return folium.CircleMarker(
-                location=[row["客戶緯度"], row["客戶經度"]],
-                radius=4,
-                color=color,
-                fill=True,
-                fillOpacity=0.6,
-                popup=folium.Popup(popup_html, max_width=260),
-            )
-
-        # 第一組圖層：按路線分組——先看「哪條路線」有問題
+        # 每條路線一個 FeatureGroup(LayerControl)
         for route in sorted(df_map["路線代碼"].unique()):
             sub = df_map[df_map["路線代碼"] == route]
-            fg = folium.FeatureGroup(name=f"路線 {route}({len(sub)} 筆)")
-            for _, row in sub.iterrows():
-                _make_marker(row).add_to(fg)
-            fg.add_to(m)
-
-        # 第二組圖層：按司機分組——關掉路線圖層、只開某位司機，
-        # 排除路線因素,單獨看「這個司機」的異常點散在哪裡
-        for driver in sorted(df_map["司機代碼"].unique()):
-            sub = df_map[df_map["司機代碼"] == driver]
-            fg = folium.FeatureGroup(name=f"司機 {driver}({len(sub)} 筆)", show=False)
-            for _, row in sub.iterrows():
-                _make_marker(row).add_to(fg)
+            fg = folium.FeatureGroup(name=f"{route}({len(sub)} 筆)")
+            # 先畫綠(正常)、後畫紅(異常),讓紅點浮在上層不被綠點蓋掉
+            for _, row in sub.sort_values("異常旗標").iterrows():
+                color = "red" if row["異常旗標"] else "green"
+                folium.CircleMarker(
+                    location=[row["客戶緯度"], row["客戶經度"]],
+                    radius=4,
+                    color=color,
+                    fill=True,
+                    fillOpacity=0.6,
+                    popup=folium.Popup(
+                        f"<b>訂單</b> {row['訂單編號']}<br>"
+                        f"<b>路線</b> {row['路線代碼']} · "
+                        f"<b>司機</b> {row['司機代碼']}<br>"
+                        f"<b>偏移</b> {row['偏移分鐘']:.0f} 分<br>"
+                        f"<b>OTD</b> {'✓ 在窗' if row['在窗內'] else '✗ 失準'}",
+                        max_width=260,
+                    ),
+                ).add_to(fg)
             fg.add_to(m)
 
         folium.LayerControl(collapsed=False).add_to(m)
