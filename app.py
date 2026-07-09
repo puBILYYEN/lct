@@ -3,7 +3,7 @@
 物流控制塔 v2 · W2 第6組(Day6-9 合併 stlite 版)
 ============================================================
 由 build_v2.py 從 W2第6組 四支報告版自動合併,原始檔未動。
-  📦 Day6 倉庫整理師 · 🚚 Day7 遲到偵探 · 🔗 Day8 供應鏈串接 · 📋 Day9 決策簡報
+  📦 Day6 倉庫整理師 · 🚚 Day7 遲到偵探 · 🔗 供應鏈串接 · 📋 決策簡報
 """
 import streamlit as st
 import pandas as pd
@@ -1704,18 +1704,18 @@ def page_day9():
         st.title("📋 9 月物流營運建議書")
     with col_b1:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🔗 Day8 供應鏈", use_container_width=True):
-            st.session_state["_pending_nav"] = "🔗 Day8 供應鏈"
+        if st.button("🔗 供應鏈", use_container_width=True):
+            st.session_state["_pending_nav"] = "🔗 供應鏈"
             st.rerun()
     with col_b2:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("📦 Day6 倉儲", use_container_width=True):
-            st.session_state["_pending_nav"] = "📦 Day6 倉儲"
+        if st.button("📦 倉儲", use_container_width=True):
+            st.session_state["_pending_nav"] = "📦 倉儲"
             st.rerun()
     with col_b3:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🚚 Day7 配送", use_container_width=True):
-            st.session_state["_pending_nav"] = "🚚 Day7 配送"
+        if st.button("🚚 配送", use_container_width=True):
+            st.session_state["_pending_nav"] = "🚚 配送"
             st.rerun()
     st.caption(f"故事 {story_id} · {row['story_name']} · 承接 {row['承接']}")
 
@@ -2008,7 +2008,7 @@ def page_day9():
 st.sidebar.title("🚚 物流控制塔 v2")
 
 if "nav_page" not in st.session_state:
-    st.session_state.nav_page = "📋 Day9 決策簡報"
+    st.session_state.nav_page = "📋 決策簡報"
 
 # 導覽按鈕用 _pending_nav 中繼，要在 radio(key="nav_page") 建立「之前」套用，
 # 不然 Streamlit 會擋「widget 綁定的 key 建立後同一輪不能再賦值」
@@ -2017,15 +2017,15 @@ if "_pending_nav" in st.session_state:
 
 page = st.sidebar.radio(
     "選擇故事",
-    ["📋 Day9 決策簡報", "🔗 Day8 供應鏈", "📦 Day6 倉儲", "🚚 Day7 配送"],
+    ["📋 決策簡報", "🔗 供應鏈", "📦 倉儲", "🚚 配送"],
     key="nav_page",
 )
 st.sidebar.divider()
 
 PAGES = {
-    "📦 Day6 倉儲": page_day6,
-    "🚚 Day7 配送": page_day7,
-    "🔗 Day8 供應鏈": page_day8,
-    "📋 Day9 決策簡報": page_day9,
+    "📦 倉儲": page_day6,
+    "🚚 配送": page_day7,
+    "🔗 供應鏈": page_day8,
+    "📋 決策簡報": page_day9,
 }
 PAGES[page]()
