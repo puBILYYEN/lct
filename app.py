@@ -438,6 +438,19 @@ def page_day6():
         "📚 對應 Day 6 講義 §2.3 EIQ-PCB · §2.4 ABC 分類 · §4.4 服務設計觀點"
     )
 
+    st.divider()
+    st.subheader("⚖️ 風險評估(樂觀 / 悲觀 / 不作為)")
+    _risks_all = pd.read_csv("decision_risks.csv", encoding="utf-8-sig")
+    _risks_here = _risks_all[_risks_all.story_id == "A"]
+    _icon_map = {"樂觀": "🟢", "悲觀": "🟡", "不作為": "🔴"}
+    _risk_cols = st.columns(3)
+    for _rc, (_, _rr) in zip(_risk_cols, _risks_here.iterrows()):
+        with _rc:
+            st.markdown(f"**{_icon_map.get(_rr['scenario'], '')} {_rr['scenario']}**")
+            st.caption(_rr["expected"])
+            st.metric("月效益(萬)", f"{_rr['monthly_万']:+d}")
+            st.caption(_rr["action"])
+
 
 def page_day7():
     # -*- coding: utf-8 -*-
@@ -878,6 +891,19 @@ def page_day7():
         "📚 對應 Day 7 講義 §2.1 OTD 三口徑 · §2.2 異常三武器 · "
         "§3.3 Folium 地圖 · §5.4 反直覺三問"
     )
+
+    st.divider()
+    st.subheader("⚖️ 風險評估(樂觀 / 悲觀 / 不作為)")
+    _risks_all = pd.read_csv("decision_risks.csv", encoding="utf-8-sig")
+    _risks_here = _risks_all[_risks_all.story_id == "B"]
+    _icon_map = {"樂觀": "🟢", "悲觀": "🟡", "不作為": "🔴"}
+    _risk_cols = st.columns(3)
+    for _rc, (_, _rr) in zip(_risk_cols, _risks_here.iterrows()):
+        with _rc:
+            st.markdown(f"**{_icon_map.get(_rr['scenario'], '')} {_rr['scenario']}**")
+            st.caption(_rr["expected"])
+            st.metric("月效益(萬)", f"{_rr['monthly_万']:+d}")
+            st.caption(_rr["action"])
 
 
 def page_day8():
@@ -1588,6 +1614,19 @@ def page_day8():
         "🟧 Orange3 → `D8_供應鏈_Orange3.md`  ·  "
         "📄 講義 → `Day8_講義.md`"
     )
+
+    st.divider()
+    st.subheader("⚖️ 風險評估(樂觀 / 悲觀 / 不作為)")
+    _risks_all = pd.read_csv("decision_risks.csv", encoding="utf-8-sig")
+    _risks_here = _risks_all[_risks_all.story_id == "C"]
+    _icon_map = {"樂觀": "🟢", "悲觀": "🟡", "不作為": "🔴"}
+    _risk_cols = st.columns(3)
+    for _rc, (_, _rr) in zip(_risk_cols, _risks_here.iterrows()):
+        with _rc:
+            st.markdown(f"**{_icon_map.get(_rr['scenario'], '')} {_rr['scenario']}**")
+            st.caption(_rr["expected"])
+            st.metric("月效益(萬)", f"{_rr['monthly_万']:+d}")
+            st.caption(_rr["action"])
 
 
 def page_day9():

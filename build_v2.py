@@ -210,6 +210,52 @@ def patch_day9(text: str) -> str:
     return text
 
 
+def patch_day8(text: str) -> str:
+    """只用在合併時的字串置換，組員原始檔一律不動。
+    拿掉「品類內 LT 變異對照」圖——跟 Tab1 全公司 LT 變異圖同一個指標、只是
+    範圍縮小到同品類，數字其實已經在上面的資料表裡看得到，屬於重複視覺化。
+    砍掉這張後全頁圖表數從 6 降到 5，符合「一份建議書 ≤ 5 張圖」原則。
+    """
+    text = text.replace(
+        '    col_c, col_d = st.columns(2)\n'
+        '    with col_c:\n'
+        '        st.markdown(f"##### {cat_pick} 品類 · LT 變異對照")\n'
+        '        sub_lt = sub.sort_values("LT變異")\n'
+        '        fig5 = px.bar(sub_lt, x="供應商", y="LT變異",\n'
+        '                      color="LT變異", color_continuous_scale="Reds",\n'
+        '                      text=sub_lt["LT變異"].round(2))\n'
+        '        fig5.add_hline(y=0.30, line_dash="dash", line_color="red", annotation_text="0.30 警戒")\n'
+        '        fig5.update_traces(textposition="outside")\n'
+        '        fig5.update_layout(height=380, margin=dict(t=20, b=10))\n'
+        '        st.plotly_chart(fig5, use_container_width=True)\n'
+        '    with col_d:\n',
+        '    with st.container():\n',
+    )
+    return text
+
+
+def append_risk_block(text: str, story_id: str) -> str:
+    """在頁面最下方加一段「樂觀/悲觀/不作為」風險提示，直接讀 Day9 用的
+    decision_risks.csv（同一份已驗證真數字），三頁故事各對應 A/B/C 一列。
+    只用在合併時附加，組員原始檔一律不動。
+    """
+    return text.rstrip("\n") + (
+        '\n\n'
+        'st.divider()\n'
+        'st.subheader("⚖️ 風險評估(樂觀 / 悲觀 / 不作為)")\n'
+        '_risks_all = pd.read_csv("decision_risks.csv", encoding="utf-8-sig")\n'
+        f'_risks_here = _risks_all[_risks_all.story_id == "{story_id}"]\n'
+        '_icon_map = {"樂觀": "🟢", "悲觀": "🟡", "不作為": "🔴"}\n'
+        '_risk_cols = st.columns(3)\n'
+        'for _rc, (_, _rr) in zip(_risk_cols, _risks_here.iterrows()):\n'
+        '    with _rc:\n'
+        '        st.markdown(f"**{_icon_map.get(_rr[\'scenario\'], \'\')} {_rr[\'scenario\']}**")\n'
+        '        st.caption(_rr["expected"])\n'
+        '        st.metric("月效益(萬)", f"{_rr[\'monthly_万\']:+d}")\n'
+        '        st.caption(_rr["action"])\n'
+    )
+
+
 def clean(fname: str, func: str) -> str:
     text = (SRC / fname).read_text(encoding="utf-8-sig")
 
@@ -235,6 +281,11 @@ def clean(fname: str, func: str) -> str:
     # 4b. Day9 專屬的字串置換（見 patch_day9 說明），組員原始檔不動
     if func == "page_day9":
         text = patch_day9(text)
+
+    # 4d. 各頁最下方加風險提示（見 append_risk_block 說明），組員原始檔不動
+    STORY_ID_BY_FUNC = {"page_day6": "A", "page_day7": "B", "page_day8": "C"}
+    if func in STORY_ID_BY_FUNC:
+        text = append_risk_block(text, STORY_ID_BY_FUNC[func])
 
     # 5. 包成 page 函式（整段縮排 4 空格）
     body = "\n".join(("    " + l) if l.strip() else "" for l in text.split("\n"))
