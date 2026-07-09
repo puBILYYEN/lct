@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物流控制塔 v2 · W2 第6組</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f6feb">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.8.1/build/stlite.min.css"
+/>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+  import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@1.8.1/build/stlite.min.js";
+
+  mount(
+    {
+      requirements: ["pandas", "numpy", "plotly", "folium", "matplotlib", "jinja2"],
+      entrypoint: "app.py",
+      files: {
+        "app.py": { url: "./app.py" },
+        "配送紀錄_202509.csv": { url: "./配送紀錄_202509.csv" },
+        "SKU_出貨明細_202509.csv": { url: "./SKU_出貨明細_202509.csv" },
+        "purchase.csv": { url: "./purchase.csv" },
+        "receipt.csv": { url: "./receipt.csv" },
+        "sales.csv": { url: "./sales.csv" },
+        "decision_summary.csv": { url: "./decision_summary.csv" },
+        "decision_supports.csv": { url: "./decision_supports.csv" },
+        "decision_risks.csv": { url: "./decision_risks.csv" }
+      }
+    },
+    document.getElementById("root")
+  );
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('Service worker 註冊失敗:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
