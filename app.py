@@ -744,7 +744,7 @@ def page_day7():
     # ============================================================
     st.divider()
     st.subheader("🗺 異常配送地圖看板")
-    st.caption("🔴 異常(IQR 外) · 🟢 正常 · 點擊 marker 看訂單詳情")
+    st.caption("🔴 異常(IQR 外) · 🟢 正常 · 右上角圖層可切換「按路線」或「按司機」分組,關掉路線圖層、只開單一司機圖層,可排除路線因素單獨看司機 · 點擊 marker 看訂單詳情")
 
     if show_only_anomaly:
         df_map = df_f[df_f["異常旗標"]]
@@ -766,27 +766,39 @@ def page_day7():
         m = folium.Map(location=[center_lat, center_lon], zoom_start=11,
                        tiles="OpenStreetMap")
 
-        # 每條路線一個 FeatureGroup(LayerControl)
+        def _make_marker(row):
+            color = "red" if row["異常旗標"] else "green"
+            popup_html = (
+                f"<b>訂單</b> {row['訂單編號']}<br>"
+                f"<b>路線</b> {row['路線代碼']} · "
+                f"<b>司機</b> {row['司機代碼']}<br>"
+                f"<b>偏移</b> {row['偏移分鐘']:.0f} 分<br>"
+                f"<b>OTD</b> {'✓ 在窗' if row['在窗內'] else '✗ 失準'}"
+            )
+            return folium.CircleMarker(
+                location=[row["客戶緯度"], row["客戶經度"]],
+                radius=4,
+                color=color,
+                fill=True,
+                fillOpacity=0.6,
+                popup=folium.Popup(popup_html, max_width=260),
+            )
+
+        # 第一組圖層：按路線分組——先看「哪條路線」有問題
         for route in sorted(df_map["路線代碼"].unique()):
             sub = df_map[df_map["路線代碼"] == route]
-            fg = folium.FeatureGroup(name=f"{route}({len(sub)} 筆)")
+            fg = folium.FeatureGroup(name=f"路線 {route}({len(sub)} 筆)")
             for _, row in sub.iterrows():
-                color = "red" if row["異常旗標"] else "green"
-                folium.CircleMarker(
-                    location=[row["客戶緯度"], row["客戶經度"]],
-                    radius=4,
-                    color=color,
-                    fill=True,
-                    fillOpacity=0.6,
-                    popup=folium.Popup(
-                        f"<b>訂單</b> {row['訂單編號']}<br>"
-                        f"<b>路線</b> {row['路線代碼']} · "
-                        f"<b>司機</b> {row['司機代碼']}<br>"
-                        f"<b>偏移</b> {row['偏移分鐘']:.0f} 分<br>"
-                        f"<b>OTD</b> {'✓ 在窗' if row['在窗內'] else '✗ 失準'}",
-                        max_width=260,
-                    ),
-                ).add_to(fg)
+                _make_marker(row).add_to(fg)
+            fg.add_to(m)
+
+        # 第二組圖層：按司機分組——關掉路線圖層、只開某位司機，
+        # 排除路線因素,單獨看「這個司機」的異常點散在哪裡
+        for driver in sorted(df_map["司機代碼"].unique()):
+            sub = df_map[df_map["司機代碼"] == driver]
+            fg = folium.FeatureGroup(name=f"司機 {driver}({len(sub)} 筆)", show=False)
+            for _, row in sub.iterrows():
+                _make_marker(row).add_to(fg)
             fg.add_to(m)
 
         folium.LayerControl(collapsed=False).add_to(m)

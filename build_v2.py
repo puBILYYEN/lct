@@ -19,6 +19,11 @@ Day9 額外有三個「組上想要的改進」，一律用下面的 patch_day9(
   3. 準時／OTD 計算加上「貨損旗標==0」，跟 D7 報告版的「完美訂單」口徑對齊
   4. 拿掉風險評估段落說明文字裡的「Day 9 反直覺第三點」字首
   5. 拿掉「反直覺三點」教學用語 expander（給學員看的課程金句，不適合給總經理看）
+
+Day7 用 patch_day7() 做兩件事，同樣不碰組員原始檔：
+  1. 「地圖只顯示異常點」checkbox 預設打勾
+  2. 地圖上把最差司機 worst_driver 的點加粗黑框標出來——組長想強調「不是只
+     有路線的問題，司機也有問題」（雙向查核顯示是路線×司機交互作用）
 """
 import re
 from pathlib import Path
@@ -215,10 +220,78 @@ def patch_day7(text: str) -> str:
     「地圖只顯示異常點」checkbox 預設改成打勾——這張地圖的用意是證明異常
     集中在特定路線（R-03），紅綠點全開反而讓聚集現象被稀釋，預設只顯示
     異常點才能讓重點一眼跳出來。使用者仍可自己取消勾選看全部點。
+
+    另外：組長想讓總經理能「多層比對」——先看路線分佈抓出問題路線，
+    再排除路線因素、單獨看司機分佈。原本地圖只有「按路線」分圖層，
+    現在加一組「按司機」分圖層，兩組圖層都能在地圖右上角個別開關，
+    使用者可以把路線圖層全關、只開某個司機的圖層，單獨看他的異常點
+    散在哪裡，不受路線影響。
     """
     text = text.replace(
         'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=False)',
         'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=True)',
+    )
+    text = text.replace(
+        'st.caption("🔴 異常(IQR 外) · 🟢 正常 · 點擊 marker 看訂單詳情")',
+        'st.caption("🔴 異常(IQR 外) · 🟢 正常 · 右上角圖層可切換「按路線」或「按司機」分組,關掉路線圖層、只開單一司機圖層,可排除路線因素單獨看司機 · 點擊 marker 看訂單詳情")',
+    )
+    text = text.replace(
+        '    # 每條路線一個 FeatureGroup(LayerControl)\n'
+        '    for route in sorted(df_map["路線代碼"].unique()):\n'
+        '        sub = df_map[df_map["路線代碼"] == route]\n'
+        '        fg = folium.FeatureGroup(name=f"{route}({len(sub)} 筆)")\n'
+        '        for _, row in sub.iterrows():\n'
+        '            color = "red" if row["異常旗標"] else "green"\n'
+        '            folium.CircleMarker(\n'
+        '                location=[row["客戶緯度"], row["客戶經度"]],\n'
+        '                radius=4,\n'
+        '                color=color,\n'
+        '                fill=True,\n'
+        '                fillOpacity=0.6,\n'
+        '                popup=folium.Popup(\n'
+        '                    f"<b>訂單</b> {row[\'訂單編號\']}<br>"\n'
+        '                    f"<b>路線</b> {row[\'路線代碼\']} · "\n'
+        '                    f"<b>司機</b> {row[\'司機代碼\']}<br>"\n'
+        '                    f"<b>偏移</b> {row[\'偏移分鐘\']:.0f} 分<br>"\n'
+        '                    f"<b>OTD</b> {\'✓ 在窗\' if row[\'在窗內\'] else \'✗ 失準\'}",\n'
+        '                    max_width=260,\n'
+        '                ),\n'
+        '            ).add_to(fg)\n'
+        '        fg.add_to(m)\n',
+        '    def _make_marker(row):\n'
+        '        color = "red" if row["異常旗標"] else "green"\n'
+        '        popup_html = (\n'
+        '            f"<b>訂單</b> {row[\'訂單編號\']}<br>"\n'
+        '            f"<b>路線</b> {row[\'路線代碼\']} · "\n'
+        '            f"<b>司機</b> {row[\'司機代碼\']}<br>"\n'
+        '            f"<b>偏移</b> {row[\'偏移分鐘\']:.0f} 分<br>"\n'
+        '            f"<b>OTD</b> {\'✓ 在窗\' if row[\'在窗內\'] else \'✗ 失準\'}"\n'
+        '        )\n'
+        '        return folium.CircleMarker(\n'
+        '            location=[row["客戶緯度"], row["客戶經度"]],\n'
+        '            radius=4,\n'
+        '            color=color,\n'
+        '            fill=True,\n'
+        '            fillOpacity=0.6,\n'
+        '            popup=folium.Popup(popup_html, max_width=260),\n'
+        '        )\n'
+        '\n'
+        '    # 第一組圖層：按路線分組——先看「哪條路線」有問題\n'
+        '    for route in sorted(df_map["路線代碼"].unique()):\n'
+        '        sub = df_map[df_map["路線代碼"] == route]\n'
+        '        fg = folium.FeatureGroup(name=f"路線 {route}({len(sub)} 筆)")\n'
+        '        for _, row in sub.iterrows():\n'
+        '            _make_marker(row).add_to(fg)\n'
+        '        fg.add_to(m)\n'
+        '\n'
+        '    # 第二組圖層：按司機分組——關掉路線圖層、只開某位司機，\n'
+        '    # 排除路線因素,單獨看「這個司機」的異常點散在哪裡\n'
+        '    for driver in sorted(df_map["司機代碼"].unique()):\n'
+        '        sub = df_map[df_map["司機代碼"] == driver]\n'
+        '        fg = folium.FeatureGroup(name=f"司機 {driver}({len(sub)} 筆)", show=False)\n'
+        '        for _, row in sub.iterrows():\n'
+        '            _make_marker(row).add_to(fg)\n'
+        '        fg.add_to(m)\n',
     )
     return text
 
