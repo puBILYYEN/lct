@@ -39,7 +39,7 @@ st.markdown(
     [data-testid="stExpandSidebarButton"]::after,
     [data-testid="stSidebarCollapsedControl"]::after,
     [data-testid="collapsedControl"]::after {
-        content: "👈 點開看四個故事";
+        content: "👈 點開看更多分析";
         position: absolute;
         left: 44px;
         top: 8px;
