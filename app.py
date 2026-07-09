@@ -538,7 +538,7 @@ def page_day7():
 
     sel_routes  = st.sidebar.multiselect("路線", all_routes, default=all_routes)
     sel_drivers = st.sidebar.multiselect("司機", all_drivers, default=all_drivers)
-    show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=True)
+    show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=False)
 
     df_f = df[df["路線代碼"].isin(sel_routes) &
               df["司機代碼"].isin(sel_drivers)]

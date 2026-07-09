@@ -291,10 +291,6 @@ def clean(fname: str, func: str) -> str:
         text,
     )
 
-    # 4a. Day7 專屬的字串置換（見 patch_day7 說明），組員原始檔不動
-    if func == "page_day7":
-        text = patch_day7(text)
-
     # 4b. Day9 專屬的字串置換（見 patch_day9 說明），組員原始檔不動
     if func == "page_day9":
         text = patch_day9(text)
