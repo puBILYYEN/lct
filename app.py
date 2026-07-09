@@ -1704,18 +1704,18 @@ def page_day9():
         st.title("📋 9 月物流營運建議書")
     with col_b1:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🔗 Day8 供應鏈串接", use_container_width=True):
-            st.session_state["_pending_nav"] = "🔗 Day8 供應鏈串接"
+        if st.button("🔗 Day8 供應鏈", use_container_width=True):
+            st.session_state["_pending_nav"] = "🔗 Day8 供應鏈"
             st.rerun()
     with col_b2:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("📦 Day6 倉庫整理師", use_container_width=True):
-            st.session_state["_pending_nav"] = "📦 Day6 倉庫整理師"
+        if st.button("📦 Day6 倉儲", use_container_width=True):
+            st.session_state["_pending_nav"] = "📦 Day6 倉儲"
             st.rerun()
     with col_b3:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("🚚 Day7 遲到偵探", use_container_width=True):
-            st.session_state["_pending_nav"] = "🚚 Day7 遲到偵探"
+        if st.button("🚚 Day7 配送", use_container_width=True):
+            st.session_state["_pending_nav"] = "🚚 Day7 配送"
             st.rerun()
     st.caption(f"故事 {story_id} · {row['story_name']} · 承接 {row['承接']}")
 
@@ -2017,15 +2017,15 @@ if "_pending_nav" in st.session_state:
 
 page = st.sidebar.radio(
     "選擇故事",
-    ["📋 Day9 決策簡報", "🔗 Day8 供應鏈串接", "📦 Day6 倉庫整理師", "🚚 Day7 遲到偵探"],
+    ["📋 Day9 決策簡報", "🔗 Day8 供應鏈", "📦 Day6 倉儲", "🚚 Day7 配送"],
     key="nav_page",
 )
 st.sidebar.divider()
 
 PAGES = {
-    "📦 Day6 倉庫整理師": page_day6,
-    "🚚 Day7 遲到偵探": page_day7,
-    "🔗 Day8 供應鏈串接": page_day8,
+    "📦 Day6 倉儲": page_day6,
+    "🚚 Day7 配送": page_day7,
+    "🔗 Day8 供應鏈": page_day8,
     "📋 Day9 決策簡報": page_day9,
 }
 PAGES[page]()

@@ -112,15 +112,15 @@ if "_pending_nav" in st.session_state:
 
 page = st.sidebar.radio(
     "選擇故事",
-    ["📋 Day9 決策簡報", "🔗 Day8 供應鏈串接", "📦 Day6 倉庫整理師", "🚚 Day7 遲到偵探"],
+    ["📋 Day9 決策簡報", "🔗 Day8 供應鏈", "📦 Day6 倉儲", "🚚 Day7 配送"],
     key="nav_page",
 )
 st.sidebar.divider()
 
 PAGES = {
-    "📦 Day6 倉庫整理師": page_day6,
-    "🚚 Day7 遲到偵探": page_day7,
-    "🔗 Day8 供應鏈串接": page_day8,
+    "📦 Day6 倉儲": page_day6,
+    "🚚 Day7 配送": page_day7,
+    "🔗 Day8 供應鏈": page_day8,
     "📋 Day9 決策簡報": page_day9,
 }
 PAGES[page]()
@@ -137,18 +137,18 @@ def patch_day9(text: str) -> str:
         '    st.title("📋 9 月物流營運建議書")\n'
         'with col_b1:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("🔗 Day8 供應鏈串接", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "🔗 Day8 供應鏈串接"\n'
+        '    if st.button("🔗 Day8 供應鏈", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "🔗 Day8 供應鏈"\n'
         '        st.rerun()\n'
         'with col_b2:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("📦 Day6 倉庫整理師", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "📦 Day6 倉庫整理師"\n'
+        '    if st.button("📦 Day6 倉儲", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "📦 Day6 倉儲"\n'
         '        st.rerun()\n'
         'with col_b3:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("🚚 Day7 遲到偵探", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "🚚 Day7 遲到偵探"\n'
+        '    if st.button("🚚 Day7 配送", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "🚚 Day7 配送"\n'
         '        st.rerun()',
     )
     # 2. Pareto 交叉線改用真實 80% 交叉點
