@@ -210,6 +210,19 @@ def patch_day9(text: str) -> str:
     return text
 
 
+def patch_day7(text: str) -> str:
+    """只用在合併時的字串置換，組員原始檔一律不動。
+    「地圖只顯示異常點」checkbox 預設改成打勾——這張地圖的用意是證明異常
+    集中在特定路線（R-03），紅綠點全開反而讓聚集現象被稀釋，預設只顯示
+    異常點才能讓重點一眼跳出來。使用者仍可自己取消勾選看全部點。
+    """
+    text = text.replace(
+        'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=False)',
+        'show_only_anomaly = st.sidebar.checkbox("地圖只顯示異常點", value=True)',
+    )
+    return text
+
+
 def patch_day8(text: str) -> str:
     """只用在合併時的字串置換，組員原始檔一律不動。
     拿掉「品類內 LT 變異對照」圖——跟 Tab1 全公司 LT 變異圖同一個指標、只是
@@ -277,6 +290,10 @@ def clean(fname: str, func: str) -> str:
         'components.html(m.get_root().render(), height=540, scrolling=True)',
         text,
     )
+
+    # 4a. Day7 專屬的字串置換（見 patch_day7 說明），組員原始檔不動
+    if func == "page_day7":
+        text = patch_day7(text)
 
     # 4b. Day9 專屬的字串置換（見 patch_day9 說明），組員原始檔不動
     if func == "page_day9":
