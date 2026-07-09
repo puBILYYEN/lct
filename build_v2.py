@@ -38,7 +38,7 @@ HEADER = '''# -*- coding: utf-8 -*-
 物流控制塔 v2 · W2 第6組(Day6-9 合併 stlite 版)
 ============================================================
 由 build_v2.py 從 W2第6組 四支報告版自動合併,原始檔未動。
-  📦 Day6 倉庫整理師 · 🚚 Day7 遲到偵探 · 🔗 供應鏈串接 · 📋 決策簡報
+  📦 Day6 倉庫整理師 · 🚚 Day7 遲到偵探 · 🔗 供應鏈管理串接 · 📋 決策簡報
 """
 import streamlit as st
 import pandas as pd
@@ -112,15 +112,15 @@ if "_pending_nav" in st.session_state:
 
 page = st.sidebar.radio(
     "選擇故事",
-    ["📋 決策簡報", "🔗 供應鏈", "📦 倉儲", "🚚 配送"],
+    ["📋 決策簡報", "🔗 供應鏈管理", "📦 倉儲管理", "🚚 物流管理"],
     key="nav_page",
 )
 st.sidebar.divider()
 
 PAGES = {
-    "📦 倉儲": page_day6,
-    "🚚 配送": page_day7,
-    "🔗 供應鏈": page_day8,
+    "📦 倉儲管理": page_day6,
+    "🚚 物流管理": page_day7,
+    "🔗 供應鏈管理": page_day8,
     "📋 決策簡報": page_day9,
 }
 PAGES[page]()
@@ -137,18 +137,18 @@ def patch_day9(text: str) -> str:
         '    st.title("📋 9 月物流營運建議書")\n'
         'with col_b1:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("🔗 供應鏈", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "🔗 供應鏈"\n'
+        '    if st.button("🔗 供應鏈管理", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "🔗 供應鏈管理"\n'
         '        st.rerun()\n'
         'with col_b2:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("📦 倉儲", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "📦 倉儲"\n'
+        '    if st.button("📦 倉儲管理", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "📦 倉儲管理"\n'
         '        st.rerun()\n'
         'with col_b3:\n'
         '    st.markdown("<br><br>", unsafe_allow_html=True)\n'
-        '    if st.button("🚚 配送", use_container_width=True):\n'
-        '        st.session_state["_pending_nav"] = "🚚 配送"\n'
+        '    if st.button("🚚 物流管理", use_container_width=True):\n'
+        '        st.session_state["_pending_nav"] = "🚚 物流管理"\n'
         '        st.rerun()',
     )
     # 2. Pareto 交叉線改用真實 80% 交叉點
