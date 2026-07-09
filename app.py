@@ -59,25 +59,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Streamlit 不會自動偵測瀏覽器「上一步/下一步」造成的網址變化去重新整理，
-# 要靠這段小 script 監聽 popstate、強制整頁重新載入，讓 FOOTER 讀到新網址的 ?page=
-# 用 components.html（不是 st.markdown）是因為 <script> 只有這裡才會真的被執行
-components.html(
-    """
-    <script>
-    (function () {
-        const top = window.parent;
-        if (top.__ctBackListenerAdded) return;
-        top.__ctBackListenerAdded = true;
-        top.addEventListener('popstate', function () {
-            top.location.reload();
-        });
-    })();
-    </script>
-    """,
-    height=0,
-)
-
 def page_day6():
     # -*- coding: utf-8 -*-
     """
@@ -2026,30 +2007,13 @@ def page_day9():
 # ============================================================
 st.sidebar.title("🚚 物流控制塔 v2")
 
-# 頁面代號跟網址參數對照，讓瀏覽器「上一步/下一步」能還原頁面
-PAGE_KEYS = {
-    "day9": "📋 Day9 決策簡報",
-    "day8": "🔗 Day8 供應鏈串接",
-    "day6": "📦 Day6 倉庫整理師",
-    "day7": "🚚 Day7 遲到偵探",
-}
-KEY_BY_LABEL = {v: k for k, v in PAGE_KEYS.items()}
-
 if "nav_page" not in st.session_state:
     st.session_state.nav_page = "📋 Day9 決策簡報"
 
 # 導覽按鈕用 _pending_nav 中繼，要在 radio(key="nav_page") 建立「之前」套用，
 # 不然 Streamlit 會擋「widget 綁定的 key 建立後同一輪不能再賦值」
-_just_clicked_button = "_pending_nav" in st.session_state
-if _just_clicked_button:
+if "_pending_nav" in st.session_state:
     st.session_state.nav_page = st.session_state.pop("_pending_nav")
-
-# 網址列的 ?page=xxx 用來還原瀏覽器上一步/下一步的狀態；
-# 但如果這一輪是「剛按了導覽按鈕」，按鈕的選擇比網址列（還沒更新）新，不能被蓋掉
-qp_page = st.query_params.get("page")
-if (not _just_clicked_button and qp_page in PAGE_KEYS
-        and PAGE_KEYS[qp_page] != st.session_state.nav_page):
-    st.session_state.nav_page = PAGE_KEYS[qp_page]
 
 page = st.sidebar.radio(
     "選擇故事",
@@ -2057,11 +2021,6 @@ page = st.sidebar.radio(
     key="nav_page",
 )
 st.sidebar.divider()
-
-# 把目前頁面同步回網址列，這一步會讓瀏覽器「記一筆」，上一步才有東西可以回
-_current_key = KEY_BY_LABEL[page]
-if st.query_params.get("page") != _current_key:
-    st.query_params["page"] = _current_key
 
 PAGES = {
     "📦 Day6 倉庫整理師": page_day6,
